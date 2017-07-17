@@ -1,0 +1,9 @@
+---
+title: Second New Post (in R Markdown)
+author: ~
+date: '2017-07-17'
+slug: second-new-post-in-r-markdown
+categories: []
+tags: []
+---
+
