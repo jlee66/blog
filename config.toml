@@ -8,7 +8,7 @@ disableKinds = ["RSS"]
 
 [params]
   title = "Jae's Blog"
-  description = '<!--[-->I study Business Analytics at Babson College, seeking to become a data scientist. I am interested in sports, food, e-commerce, and fashion fields, where I hope to leverage my technical skills. I am an adventurer, looking for new challenges. <br />'
+  description = '<!--[-->I study Business Analytics at Babson College, seeking to become a data scientist. I am interested in sports, food, e-commerce, and fashion fields, where I hope to leverage my technical skills at. I am an adventurer, looking for new challenges. <br />'
   logo = "fa-diamond"
   copyright = "Untitled"
 
