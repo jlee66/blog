@@ -1,5 +1,5 @@
 baseurl = "/"
-title = "Dimension"
+title = "Jae's Blog"
 theme = "dimension"
 languageCode = "en-us"
 defaultContentLanguage = "en"
@@ -8,7 +8,7 @@ disableKinds = ["RSS"]
 
 [params]
   title = "Jae's Blog"
-  description = '<!--[-->I study Business Analytics at [Babson College](//http://www.babson.edu/), seeking to become a data scientist. I am interested in sports, food, e-commerce, and fashion, which I am hoping to leverage my technical skills at. I am an adventurer, seeking for new challenges. <br />'
+  description = '<!--[-->I study Business Analytics at Babson College, seeking to become a data scientist. I am interested in sports, food, e-commerce, and fashion, which I am hoping to leverage my technical skills at. I am an adventurer, seeking for new challenges. <br />'
   logo = "fa-diamond"
   copyright = "Untitled"
 
