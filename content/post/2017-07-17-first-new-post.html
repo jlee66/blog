@@ -1,12 +1,99 @@
 ---
-title: First New Post
+title: First to score wins the game?
 author: ~
 date: '2017-07-17'
-slug: first-new-post
+slug: Project #1
 categories: []
 tags: []
 ---
 
 
 
-
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>Soccer is undoubtedly the most popular sport in the world. The topic that I chose for the project is El Clásico, which is a match contested between the Spanish football clubs: <em>Real Madrid</em> and <em>Barcelona</em>. As a soccer player, I was naturally inclined to question what factors would influence the result of the matches. One critical aspect that came up to my mind was scoring the first goal in the match. Granted, Real Madrid and Barcelona are known as the best soccer teams in the world. Yet, would the first goal in the match actually influence both teams? Some people say that scoring the first goal can boost up the team spirit, or morale while the others disavow such perspective. To my delight, however, scoring the first goal in the soccer match is a crucial determinant of the result, which is my proposed null hypothesis for the project.</p>
+</div>
+<div id="data-source-and-details" class="section level1">
+<h1>Data source and details</h1>
+<p>The dataset that I used for the project is from <a href="https://en.wikipedia.org/wiki/List_of_El_Cl%C3%A1sico_matches">Wikipedia</a>, which lists 174 matches played against each other in every <a href="https://en.wikipedia.org/wiki/La_Liga">La Liga</a> season since its inception in 1929. The dataset includes, the dates, home team, away team, score(fulltime/halftime), goals(Home), and goals(Away). The reason why I did not include the tournament matches like <a href="https://en.wikipedia.org/wiki/Copa_del_Rey">Copa del Rey</a>, <a href="https://en.wikipedia.org/wiki/Supercopa_de_Espa%C3%B1a">Spanish Super Cup</a>, or <a href="https://en.wikipedia.org/wiki/UEFA_Champions_League">UEFA Champions League</a> is because players tend to have higher motivation during the tournament , which could be more significant factor in determining the winner of the match, and I did not want to skew the dataset. Since the raw dataset did not explicitly tell who the winner is and which team scored the first goal, I had to clean up the dataset.</p>
+<pre><code>##          Home        Away Result HomeFirstGoal
+## 1   Barcelona Real Madrid   Away            No
+## 2 Real Madrid   Barcelona   Away            No
+## 3   Barcelona Real Madrid   Away            No
+## 4 Real Madrid   Barcelona   Home           Yes
+## 5 Real Madrid   Barcelona   Draw          Draw
+## 6   Barcelona Real Madrid   Home           Yes</code></pre>
+</div>
+<div id="initial-explorartory-analysis" class="section level1">
+<h1>Initial Explorartory Analysis</h1>
+<p>After I cleaned the dataset, I was curious to see how Real Madrid and Barcelona performed all 174 matches in every La Liga season when both were in home side. By looking at the table below, I was able to notice that both Real Madrid and Barcelona performed far better when they played at their home fields; not to mention, Real Madrid was ahead of three more wins during every La Liga season. It is crystal clear that home advantage is very significant in soccer because of the familiar surroundings, the backing of a vociferous home crowd, or the lack of traveling involved. Indeed, there is definite benefit to hosting a soccer match and we can notice from the relative success of host nations at major tournaments over years. Could it be that the increased attendances and crowd favour makes home sides’ chances of victory increase?</p>
+<pre><code>##              
+##               Away Draw Home
+##   Barcelona     20   18   49
+##   Real Madrid   20   15   52</code></pre>
+<p>Then, I was interested in whether home team would score the first goal or not. If you take a look at the table below, the result is pretty promising. When each team hosted the match, both Real Madrid and Barcelona scored the first goal, which almost accounts for two thirds of all goals.</p>
+<pre><code>##              
+##               Draw No Yes
+##   Barcelona      5 25  57
+##   Real Madrid    3 23  61</code></pre>
+</div>
+<div id="hypothesis" class="section level1">
+<h1>Hypothesis</h1>
+<p>After exploring through the dataset, analyzing the trends of wins and scoring the first goal, and from my own personal knowledge, I proposed my null hypothesis for the project: first team to score the goal wins the match.</p>
+</div>
+<div id="experimentanalysis" class="section level1">
+<h1>Experiment/Analysis</h1>
+<p>I chose to use Naive Bayes model to test my null hypothesis because it does not require complicated optimization, which means it is light to train and easily updateable if new training dataset is received. Perhaps, possible extension for this project may be including the test results of other algorithms. Let’s take a look at the object for Naive Bayes Classifier. The prior probabilities state that there is about 60% chance of winning the soccer match when the team hosts the game, which seems to be persuasive because of the numerous factors behind the home advantage. The conditional probabilities illustarte the result of the matches given that home team scores the first goal of the game. The result tells us that there is about 92% chance of winning the game if the home team scores the first goal. However, if the home team concedes the first goal, there is roughly 8% chance of winning the match. The low chance of winning the match when home team conceded the first goal may be perhaps due to the fact that both Real Madrid and Barcelona have strong squads, which make them hard to score against each other.</p>
+<pre><code>## 
+## Naive Bayes Classifier for Discrete Predictors
+## 
+## Call:
+## naiveBayes.default(x = X, y = Y, laplace = laplace)
+## 
+## A-priori probabilities:
+## Y
+##      Away      Draw      Home 
+## 0.2357143 0.2000000 0.5642857 
+## 
+## Conditional probabilities:
+##       HomeFirstGoal
+## Y            Draw         No        Yes
+##   Away 0.00000000 0.75757576 0.24242424
+##   Draw 0.25000000 0.25000000 0.50000000
+##   Home 0.00000000 0.08860759 0.91139241</code></pre>
+<p>After training the naive bayes model, I tested the null hypothesis using the test data. As you can see the result below, the model seems to have high accuracy of 74% and relatively high sensitivity and specificity, which demonstrate the proportion of actual positive/negative are captured by the model. The prediction was made based on the trained model and the model is roughly 74% accurate in predicting that there is 92% chance of winning the soccer match when home team scores the first goal.</p>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction Away Draw Home
+##       Away    4    2    1
+##       Draw    0    4    0
+##       Home    3    3   17
+## 
+## Overall Statistics
+##                                           
+##                Accuracy : 0.7353          
+##                  95% CI : (0.5564, 0.8712)
+##     No Information Rate : 0.5294          
+##     P-Value [Acc &gt; NIR] : 0.01157         
+##                                           
+##                   Kappa : 0.5342          
+##  Mcnemar&#39;s Test P-Value : 0.11161         
+## 
+## Statistics by Class:
+## 
+##                      Class: Away Class: Draw Class: Home
+## Sensitivity               0.5714      0.4444      0.9444
+## Specificity               0.8889      1.0000      0.6250
+## Pos Pred Value            0.5714      1.0000      0.7391
+## Neg Pred Value            0.8889      0.8333      0.9091
+## Prevalence                0.2059      0.2647      0.5294
+## Detection Rate            0.1176      0.1176      0.5000
+## Detection Prevalence      0.2059      0.1176      0.6765
+## Balanced Accuracy         0.7302      0.7222      0.7847</code></pre>
+</div>
+<div id="results" class="section level1">
+<h1>Results</h1>
+<p>Going on forwards, there are additional steps that I can take to improve the model. If I were to scrape more dataset, or use API from different soccer leagues, perhaps <a href="https://en.wikipedia.org/wiki/Premier_League">English Premier League</a>, and by testing other algorithms, I believe that there could be much more interesting findings in my model. Possible extension of my project could be creating a shinny app that includes numerous variables and letting users to interact with the odds of winning the soccer match.</p>
+<p>To sum up, this project was by far the most interesting project for me not only because I am interested in soccer but also by the fact that integration of data science with my common interest produced some interesting results. The model may seem to be easily executable, yet it was my first time spending most of the hours cleaning the raw data set, which was a unforgettable experience.</p>
+</div>
