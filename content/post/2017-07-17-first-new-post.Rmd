@@ -1,9 +1,303 @@
 ---
-title: First New Post
+title: First to score wins the game?
 author: ~
 date: '2017-07-17'
-slug: first-new-post
+slug: Project #1
 categories: []
 tags: []
 ---
 
+# Introduction
+Soccer is undoubtedly the most popular sport in the world. The topic that I chose for the project is El Clásico, which is a match contested between the Spanish football clubs: *Real Madrid* and *Barcelona*. As a soccer player, I was naturally inclined to question what factors would influence the result of the matches. One critical aspect that came up to my mind was scoring the first goal in the match. Granted, Real Madrid and Barcelona are known as the best soccer teams in the world. Yet, would the first goal in the match actually influence both teams? Some people say that scoring the first goal can boost up the team spirit, or morale while the others disavow such perspective. To my delight, however, scoring the first goal in the soccer match is a crucial determinant of the result, which is my proposed null hypothesis for the project. 
+
+# Data source and details
+The dataset that I used for the project is from [Wikipedia](https://en.wikipedia.org/wiki/List_of_El_Cl%C3%A1sico_matches), which lists 174 matches played against each other in every [La Liga](https://en.wikipedia.org/wiki/La_Liga) season since its inception in 1929. The dataset includes, the dates, home team, away team, score(fulltime/halftime), goals(Home), and goals(Away). The reason why I did not include the tournament matches like [Copa del Rey](https://en.wikipedia.org/wiki/Copa_del_Rey), [Spanish Super Cup](https://en.wikipedia.org/wiki/Supercopa_de_Espa%C3%B1a), or [UEFA Champions League](https://en.wikipedia.org/wiki/UEFA_Champions_League) is because players tend to have higher motivation during the tournament , which could be more significant factor in determining the winner of the match, and I did not want to skew the dataset. Since the raw dataset did not explicitly tell who the winner is and which team scored the first goal, I had to clean up the dataset. 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(rvest)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(e1071)
+library(caret)
+test <- read_html("https://en.wikipedia.org/wiki/List_of_El_Cl%C3%A1sico_matches") %>%
+  html_node("#mw-content-text > div > table:nth-child(8)") %>%
+  html_table(trim = TRUE, fill = TRUE)
+
+
+# Rename columns
+colnames(test) <- c("#", "Date", "Round", "Home", "Away", "Score", "HomeGoals", "AwayGoals")
+
+# Select only Home, Away, Score and divide Score into Halftime and Fulltime
+test <- test %>% select(Date, Home, Away, Score, HomeGoals, AwayGoals) %>%
+  separate(Score, paste(c("Fulltime", "Halftime")), sep = " ")
+
+# Remove parenthesis in Halftime column
+test$Halftime <- gsub("[()]", "", test$Halftime)
+
+# Create a new column stating the winner of the game
+test <- separate(test, Fulltime, paste(c("x1", "x2")), sep = "\\p{Pd}") #removing both en-dash and hyphen
+test <- mutate(test, Result = ifelse(test$x1 > test$x2, "Home", ifelse(test$x1 == test$x2, "Draw", "Away"))) ### INCLUDE DRAW
+
+# Unite the x1 and x2 columns into Fulltime 
+test <- test %>% 
+  within(Fulltime <- paste(x1, x2, sep = "-")) %>%
+  subset(select=c(Date, Home, Away, Fulltime, Halftime, Result, HomeGoals, AwayGoals)) 
+
+#z2
+test <- separate(test, HomeGoals, paste(c("z1", "z2")), sep = "[()]")
+
+# Remove punctuation and letter
+test$z2 <- gsub("\\p|[[:punct:]]","",test$z2)
+# Keep only first two number and change NA to 0
+test$z2 <- substr(test$z2, 0, 2)
+# Change NA to 0
+test$z2[is.na(test$z2)] <- 0
+# Convert character to number
+test$z2 <- as.numeric(test$z2)
+
+#y2
+test <- separate(test, AwayGoals, paste(c("y1", "y2")), sep = "[()]")
+
+# Remove punctuation and letter
+test$y2 <- gsub("\\o|p|g|[[:punct:]]", "", test$y2) %>%
+  str_trim()
+# Keep only first two number x
+test$y2 <- substr(test$y2, 0,2)
+# Change NA to 0
+test$y2[is.na(test$y2)] <- 0
+# Convert character to number
+test$y2 <- as.numeric(test$y2)
+
+# Get the team to score the first goal
+test <- mutate(test, HomeFirstGoal = ifelse(test$z2 == 0 & test$y2 != 0, "No", 
+                                  ifelse(test$z2 != 0 & test$y2 == 0, "Yes", 
+                                  ifelse(test$z2 < test$y2, "Yes",
+                                  ifelse(test$z2 == test$y2, "Draw", "No")))))
+#
+test <- select(test, Home, Away, Result, HomeFirstGoal)
+
+head(test)
+```
+
+# Initial Explorartory Analysis
+After I cleaned the dataset, I was curious to see how Real Madrid and Barcelona performed all 174 matches in every La Liga season when both were in home side. By looking at the table below, I was able to notice that both Real Madrid and Barcelona performed far better when they played at their home fields; not to mention, Real Madrid was ahead of three more wins during every La Liga season. It is crystal clear that home advantage is very significant in soccer because of the familiar surroundings, the backing of a vociferous home crowd, or the lack of traveling involved. Indeed, there is definite benefit to hosting a soccer match and we can notice from the relative success of host nations at major tournaments over years. Could it be that the increased attendances and crowd favour makes home sides' chances of victory increase? 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(rvest)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(e1071)
+library(caret)
+
+table(test$Home, test$Result)
+```
+
+Then, I was interested in whether home team would score the first goal or not. If you take a look at the table below, the result is pretty promising. When each team hosted the match, both Real Madrid and Barcelona scored the first goal, which almost accounts for two thirds of all goals. 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(rvest)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(e1071)
+library(caret)
+
+table(test$Home, test$HomeFirstGoal)
+```
+
+# Hypothesis
+After exploring through the dataset, analyzing the trends of wins and scoring the first goal, and from my own personal knowledge, I proposed my null hypothesis for the project: first team to score the goal wins the match. 
+
+# Experiment/Analysis
+I chose to use Naive Bayes model to test my null hypothesis because it does not require complicated optimization, which means it is light to train and easily updateable if new training dataset is received. Perhaps, possible extension for this project may be including the test results of other algorithms. Let's take a look at the object for Naive Bayes Classifier. The prior probabilities state that there is about 60% chance of winning the soccer match when the team hosts the game, which seems to be persuasive because of the numerous factors behind the home advantage. The conditional probabilities illustarte the result of the matches given that home team scores the first goal of the game. The result tells us that there is about 92% chance of winning the game if the home team scores the first goal. However, if the home team concedes the first goal, there is roughly 8% chance of winning the match. The low chance of winning the match when home team conceded the first goal may be perhaps due to the fact that both Real Madrid and Barcelona have strong squads, which make them hard to score against each other. 
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(rvest)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(e1071)
+library(caret)
+# ---------------------------------------------------------------------------------------------------------------------
+# Cleaning the data
+# ---------------------------------------------------------------------------------------------------------------------
+# Scrape the data
+test <- read_html("https://en.wikipedia.org/wiki/List_of_El_Cl%C3%A1sico_matches") %>%
+  html_node("#mw-content-text > div > table:nth-child(8)") %>%
+  html_table(trim = TRUE, fill = TRUE)
+
+# Rename columns
+colnames(test) <- c("#", "Date", "Round", "Home", "Away", "Score", "HomeGoals", "AwayGoals")
+
+# Select only Home, Away, Score and divide Score into Halftime and Fulltime
+test <- test %>% select(Date, Home, Away, Score, HomeGoals, AwayGoals) %>%
+  separate(Score, paste(c("Fulltime", "Halftime")), sep = " ")
+
+# Remove parenthesis in Halftime column
+test$Halftime <- gsub("[()]", "", test$Halftime)
+
+# Create a new column stating the winner of the game
+test <- separate(test, Fulltime, paste(c("x1", "x2")), sep = "\\p{Pd}") #removing both en-dash and hyphen
+test <- mutate(test, Result = ifelse(test$x1 > test$x2, "Home", ifelse(test$x1 == test$x2, "Draw", "Away"))) ### INCLUDE DRAW
+
+# Unite the x1 and x2 columns into Fulltime 
+test <- test %>% 
+  within(Fulltime <- paste(x1, x2, sep = "-")) %>%
+  subset(select=c(Date, Home, Away, Fulltime, Halftime, Result, HomeGoals, AwayGoals)) 
+
+#z2
+test <- separate(test, HomeGoals, paste(c("z1", "z2")), sep = "[()]")
+
+# Remove punctuation and letter
+test$z2 <- gsub("\\p|[[:punct:]]","",test$z2)
+# Keep only first two number and change NA to 0
+test$z2 <- substr(test$z2, 0, 2)
+# Change NA to 0
+test$z2[is.na(test$z2)] <- 0
+# Convert character to number
+test$z2 <- as.numeric(test$z2)
+
+#y2
+test <- separate(test, AwayGoals, paste(c("y1", "y2")), sep = "[()]")
+
+# Remove punctuation and letter
+test$y2 <- gsub("\\o|p|g|[[:punct:]]", "", test$y2) %>%
+  str_trim()
+# Keep only first two number x
+test$y2 <- substr(test$y2, 0,2)
+# Change NA to 0
+test$y2[is.na(test$y2)] <- 0
+# Convert character to number
+test$y2 <- as.numeric(test$y2)
+
+# Get the team to score the first goal
+test <- mutate(test, HomeFirstGoal = ifelse(test$z2 == 0 & test$y2 != 0, "No", 
+                                  ifelse(test$z2 != 0 & test$y2 == 0, "Yes", 
+                                  ifelse(test$z2 < test$y2, "Yes",
+                                  ifelse(test$z2 == test$y2, "Draw", "No")))))
+#
+test <- select(test, Home, Away, Result, HomeFirstGoal)
+# ---------------------------------------------------------------------------------------------------------------------
+# Model 
+# ---------------------------------------------------------------------------------------------------------------------
+#Sample Indexes
+indexes = sample(1:nrow(test), size=0.2*nrow(test))
+
+# Split data
+test1 = test[indexes,]
+train = test[-indexes,]
+#
+#
+train$Result <- factor(train$Result)
+train$HomeFirstGoal <- factor(train$HomeFirstGoal)
+test1$HomeFirstGoal <- factor(test1$HomeFirstGoal)
+test1$Result <- factor(test1$Result)
+test1$Home <- factor(test1$Home)
+test1$Away <- factor(test1$Away)
+
+#
+classifier <- naiveBayes(Result ~ HomeFirstGoal, train)
+
+classifier
+```
+After training the naive bayes model, I tested the null hypothesis using the test data. As you can see the result below, the model seems to have high accuracy of 74% and relatively high sensitivity and specificity, which demonstrate the proportion of actual positive/negative are captured by the model. The prediction was made based on the trained model and the model is roughly 74% accurate in predicting that there is 92% chance of winning the soccer match when home team scores the first goal. 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(rvest)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(e1071)
+library(caret)
+# ---------------------------------------------------------------------------------------------------------------------
+# Cleaning the data
+# ---------------------------------------------------------------------------------------------------------------------
+# Scrape the data
+test <- read_html("https://en.wikipedia.org/wiki/List_of_El_Cl%C3%A1sico_matches") %>%
+  html_node("#mw-content-text > div > table:nth-child(8)") %>%
+  html_table(trim = TRUE, fill = TRUE)
+
+# Rename columns
+colnames(test) <- c("#", "Date", "Round", "Home", "Away", "Score", "HomeGoals", "AwayGoals")
+
+# Select only Home, Away, Score and divide Score into Halftime and Fulltime
+test <- test %>% select(Date, Home, Away, Score, HomeGoals, AwayGoals) %>%
+  separate(Score, paste(c("Fulltime", "Halftime")), sep = " ")
+
+# Remove parenthesis in Halftime column
+test$Halftime <- gsub("[()]", "", test$Halftime)
+
+# Create a new column stating the winner of the game
+test <- separate(test, Fulltime, paste(c("x1", "x2")), sep = "\\p{Pd}") #removing both en-dash and hyphen
+test <- mutate(test, Result = ifelse(test$x1 > test$x2, "Home", ifelse(test$x1 == test$x2, "Draw", "Away"))) ### INCLUDE DRAW
+
+# Unite the x1 and x2 columns into Fulltime 
+test <- test %>% 
+  within(Fulltime <- paste(x1, x2, sep = "-")) %>%
+  subset(select=c(Date, Home, Away, Fulltime, Halftime, Result, HomeGoals, AwayGoals)) 
+
+#z2
+test <- separate(test, HomeGoals, paste(c("z1", "z2")), sep = "[()]")
+
+# Remove punctuation and letter
+test$z2 <- gsub("\\p|[[:punct:]]","",test$z2)
+# Keep only first two number and change NA to 0
+test$z2 <- substr(test$z2, 0, 2)
+# Change NA to 0
+test$z2[is.na(test$z2)] <- 0
+# Convert character to number
+test$z2 <- as.numeric(test$z2)
+
+#y2
+test <- separate(test, AwayGoals, paste(c("y1", "y2")), sep = "[()]")
+
+# Remove punctuation and letter
+test$y2 <- gsub("\\o|p|g|[[:punct:]]", "", test$y2) %>%
+  str_trim()
+# Keep only first two number x
+test$y2 <- substr(test$y2, 0,2)
+# Change NA to 0
+test$y2[is.na(test$y2)] <- 0
+# Convert character to number
+test$y2 <- as.numeric(test$y2)
+
+# Get the team to score the first goal
+test <- mutate(test, HomeFirstGoal = ifelse(test$z2 == 0 & test$y2 != 0, "No", 
+                                  ifelse(test$z2 != 0 & test$y2 == 0, "Yes", 
+                                  ifelse(test$z2 < test$y2, "Yes",
+                                  ifelse(test$z2 == test$y2, "Draw", "No")))))
+#
+test <- select(test, Home, Away, Result, HomeFirstGoal)
+# ---------------------------------------------------------------------------------------------------------------------
+# Model 
+# ---------------------------------------------------------------------------------------------------------------------
+#Sample Indexes
+indexes = sample(1:nrow(test), size=0.2*nrow(test))
+
+# Split data
+test1 = test[indexes,]
+train = test[-indexes,]
+#
+#
+train$Result <- factor(train$Result)
+train$HomeFirstGoal <- factor(train$HomeFirstGoal)
+test1$HomeFirstGoal <- factor(test1$HomeFirstGoal)
+test1$Result <- factor(test1$Result)
+test1$Home <- factor(test1$Home)
+test1$Away <- factor(test1$Away)
+
+#
+classifier <- naiveBayes(Result ~ HomeFirstGoal, train)
+
+#classifier
+
+prediction <- predict(classifier, test1, type = "class")
+
+confusionMatrix(prediction, test1$Result)
+```
+
+# Results
+Going on forwards, there are additional steps that I can take to improve the model. If I were to scrape more dataset, or use API from different soccer leagues, perhaps [English Premier League](https://en.wikipedia.org/wiki/Premier_League), and by testing other algorithms, I believe that there could be much more interesting findings in my model. Possible extension of my project could be creating a shinny app that includes numerous variables and letting users to interact with the odds of winning the soccer match.
+	
+To sum up, this project was by far the most interesting project for me not only because I am interested in soccer but also by the fact that integration of data science with my common interest produced some interesting results. The model may seem to be easily executable, yet it was my first time spending most of the hours cleaning the raw data set, which was a unforgettable experience. 
