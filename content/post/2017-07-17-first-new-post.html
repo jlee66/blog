@@ -1,5 +1,5 @@
 ---
-title: First Goal=Winning?
+title: First to score wins the game?
 author: ~
 date: '2017-07-17'
 slug: Project #1
@@ -53,44 +53,44 @@ tags: []
 ## A-priori probabilities:
 ## Y
 ##      Away      Draw      Home 
-## 0.1857143 0.1928571 0.6214286 
+## 0.2285714 0.1642857 0.6071429 
 ## 
 ## Conditional probabilities:
 ##       HomeFirstGoal
-## Y           Draw        No       Yes
-##   Away 0.0000000 0.6538462 0.3461538
-##   Draw 0.2592593 0.2962963 0.4444444
-##   Home 0.0000000 0.1034483 0.8965517</code></pre>
+## Y            Draw         No        Yes
+##   Away 0.00000000 0.68750000 0.31250000
+##   Draw 0.30434783 0.21739130 0.47826087
+##   Home 0.00000000 0.09411765 0.90588235</code></pre>
 <p>After training the naive bayes model, I tested the null hypothesis using the test data. As you can see the result below, the model seems to have high accuracy of 74% and relatively high sensitivity and specificity, which demonstrate the proportion of actual positive/negative are captured by the model. The prediction was made based on the trained model and the model is roughly 74% accurate in predicting that there is 92% chance of winning the soccer match when home team scores the first goal.</p>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##           Reference
 ## Prediction Away Draw Home
-##       Away    5    1    0
-##       Draw    0    4    0
-##       Home    1    1   22
+##       Away    5    1    2
+##       Draw    0    3    0
+##       Home    4    2   17
 ## 
 ## Overall Statistics
 ##                                           
-##                Accuracy : 0.9118          
-##                  95% CI : (0.7632, 0.9814)
-##     No Information Rate : 0.6471          
-##     P-Value [Acc &gt; NIR] : 0.0004321       
+##                Accuracy : 0.7353          
+##                  95% CI : (0.5564, 0.8712)
+##     No Information Rate : 0.5588          
+##     P-Value [Acc &gt; NIR] : 0.02669         
 ##                                           
-##                   Kappa : 0.8204          
-##  Mcnemar&#39;s Test P-Value : 0.3916252       
+##                   Kappa : 0.5135          
+##  Mcnemar&#39;s Test P-Value : 0.29978         
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: Away Class: Draw Class: Home
-## Sensitivity               0.8333      0.6667      1.0000
-## Specificity               0.9643      1.0000      0.8333
-## Pos Pred Value            0.8333      1.0000      0.9167
-## Neg Pred Value            0.9643      0.9333      1.0000
-## Prevalence                0.1765      0.1765      0.6471
-## Detection Rate            0.1471      0.1176      0.6471
-## Detection Prevalence      0.1765      0.1176      0.7059
-## Balanced Accuracy         0.8988      0.8333      0.9167</code></pre>
+## Sensitivity               0.5556     0.50000      0.8947
+## Specificity               0.8800     1.00000      0.6000
+## Pos Pred Value            0.6250     1.00000      0.7391
+## Neg Pred Value            0.8462     0.90323      0.8182
+## Prevalence                0.2647     0.17647      0.5588
+## Detection Rate            0.1471     0.08824      0.5000
+## Detection Prevalence      0.2353     0.08824      0.6765
+## Balanced Accuracy         0.7178     0.75000      0.7474</code></pre>
 </div>
 <div id="results" class="section level1">
 <h1>Results</h1>
